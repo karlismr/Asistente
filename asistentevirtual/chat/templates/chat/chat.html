@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Asistente</title>
+
+    <link rel="manifest" href="{% static 'manifest/manifest.json' %}" />
+    <link rel="icon" href="{% static 'icons/icon-192.png' %}" />
+    <meta name="theme-color" content="#f472b6" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("{% static 'service-worker.js' %}");
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Simple Chat</h1>
+    <div id="chat-box">
+      {% for message in messages %}
+      <p>
+        <strong>{{ message.timestamp|date:"H:i" }}:</strong> {{ message.content
+        }}
+      </p>
+      {% endfor %}
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="text" name="content" required />
+      <button type="submit">Send</button>
+    </form>
+  </body>
+</html>
