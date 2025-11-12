@@ -1,33 +1,72 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Asistente</title>
+{% extends 'chat/base.html' %} {% load static %} {% block content %}
+<!-- 🟣 BARRA SUPERIOR tipo WhatsApp -->
+<div
+  class="bg-purple-500 text-white px-4 py-3 flex items-center justify-between shadow-md"
+>
+  <div class="flex items-center space-x-3">
+    {% if config.imagen %}
+    <img
+      src="{{ config.imagen.url }}"
+      alt="avatar"
+      class="w-10 h-10 rounded-full bg-white p-1"
+    />
+    {% else %}
+    <img
+      src="{% static 'icons/icon-192.png' %}"
+      alt="avatar"
+      class="w-10 h-10 rounded-full bg-white p-1"
+    />
+    {% endif %}
 
-    <link rel="manifest" href="{% static 'manifest/manifest.json' %}" />
-    <link rel="icon" href="{% static 'icons/icon-192.png' %}" />
-    <meta name="theme-color" content="#f472b6" />
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("{% static 'service-worker.js' %}");
-      }
-    </script>
-  </head>
-  <body>
-    <h1>Simple Chat</h1>
-    <div id="chat-box">
-      {% for message in messages %}
-      <p>
-        <strong>{{ message.timestamp|date:"H:i" }}:</strong> {{ message.content
-        }}
-      </p>
-      {% endfor %}
+    <p class="font-semibold text-sm">{{ config.nombre }}</p>
+    <p class="text-xs text-purple-100">Disponible</p>
+  </div>
+  <a href="{% url 'configurar_asistente' %}" title="Configurar asistente">
+    <div class="text-white text-2xl hover:text-purple-200 transition">⚙️</div>
+  </a>
+</div>
+
+<!--  MENSAJES DEL CHAT -->
+<div id="chat-box" class="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+  {% for message in messages %} {% if forloop.counter|divisibleby:2 %}
+  <!-- Bot -->
+  <div class="flex items-start">
+    <div
+      class="bg-white text-gray-800 px-4 py-2 rounded-xl shadow w-fit max-w-xs"
+    >
+      {{ message.content }}
     </div>
-    <form method="post">
-      {% csrf_token %}
-      <input type="text" name="content" required />
-      <button type="submit">Send</button>
-    </form>
-  </body>
-</html>
+  </div>
+  {% else %}
+  <!-- Usuario -->
+  <div class="flex justify-end">
+    <div
+      class="bg-purple-500 text-white px-4 py-2 rounded-xl shadow w-fit max-w-xs"
+    >
+      {{ message.content }}
+    </div>
+  </div>
+  {% endif %} {% endfor %}
+</div>
+
+<!--  CAMPO DE TEXTO -->
+<form method="post" class="flex items-center p-2 bg-white shadow-inner">
+  {% csrf_token %}
+  <input
+    name="content"
+    type="text"
+    placeholder="Escribe tu mensaje..."
+    required
+    class="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+  />
+  <button type="submit" class="ml-2 text-purple-600 hover:text-purple-800">
+    📤
+  </button>
+</form>
+
+<!-- Scroll automático al final -->
+<script>
+  const chatBox = document.getElementById("chat-box");
+  chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}
