@@ -1,17 +1,24 @@
 from django.shortcuts import render, redirect
 from .forms import AsistenteConfigForm
 from .models import AsistenteConfig, Message
-
+from .gemini_utils import obtener_respuesta_gemini
 
 def chat_view(request):
     if request.method == 'POST':
         content = request.POST.get('content')
         if content:
-            Message.objects.create(content=content)
+            # Guardar el mensaje del USUARIO
+            Message.objects.create(content=content, is_user=True)
 
-    messages = Message.objects.all()
+            # OBTENER RESPUESTA DE GEMINI
+            respuesta_ia = obtener_respuesta_gemini(content)
+            
+            # GUARDAR LA RESPUESTA DE LA IA
+            Message.objects.create(content=respuesta_ia, is_user=False)
 
-    # Obtener la configuración del asistente (si no existe, usar valores por defecto)
+    messages = Message.objects.all().order_by('created_at')
+
+    # Obtener la configuración del asistente
     config = AsistenteConfig.objects.first()
     if not config:
         config = AsistenteConfig(nombre="Asistente Virtual", imagen=None)

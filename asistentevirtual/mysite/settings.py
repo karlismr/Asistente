@@ -130,3 +130,5 @@ TAILWIND_APP_NAME = "tw_theme"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+GEMINI_API_KEY = "AIzaSyBMNmTlAByxhbnY9VoidgGWoaF9RG_jih0"
