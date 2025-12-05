@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -24,6 +24,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
      path('chat/', include('chat.urls')),
       path('', RedirectView.as_view(url='/chat/', permanent=False)),
+
+      path('manifest.json', TemplateView.as_view(
+        template_name='manifest.json', 
+        content_type='application/json'
+    )),
+    path('serviceworker.js', TemplateView.as_view(
+        template_name='serviceworker.js', 
+        content_type='application/javascript'
+    )),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

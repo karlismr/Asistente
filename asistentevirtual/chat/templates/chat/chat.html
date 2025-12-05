@@ -1,4 +1,4 @@
-{% extends 'chat/base.html' %} {% load static %} {% block content %}
+{% extends 'chat/base.html' %} {% load static %} {% block content %} {% load markdown_extras %}
 
 <div
   class="bg-purple-500 text-white px-4 py-3 flex items-center justify-between shadow-md"
@@ -34,7 +34,7 @@
     <div
       class="bg-white text-gray-800 px-4 py-2 rounded-xl shadow w-fit max-w-xs"
     >
-      {{ message.content }}
+      {{ message.content | markdown | safe }}
     </div>
   </div>
   {% else %}
@@ -43,7 +43,7 @@
     <div
       class="bg-purple-500 text-white px-4 py-2 rounded-xl shadow w-fit max-w-xs"
     >
-      {{ message.content }}
+      {{ message.content | markdown | safe}}
     </div>
   </div>
   {% endif %} {% endfor %}
