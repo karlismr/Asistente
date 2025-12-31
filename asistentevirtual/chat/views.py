@@ -1,9 +1,16 @@
+import markdown
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .forms import AsistenteConfigForm
 from .models import AsistenteConfig, Message
 from .gemini_utils import obtener_respuesta_gemini
 
 def chat_view(request):
+
+    config = AsistenteConfig.objects.first()
+    if not config:
+        config = AsistenteConfig(nombre="Asistente Virtual", imagen=None)
+
     if request.method == 'POST':
         content = request.POST.get('content')
         if content:
@@ -14,15 +21,21 @@ def chat_view(request):
             respuesta_ia = obtener_respuesta_gemini(content)
             
             # GUARDAR LA RESPUESTA DE LA IA
-            Message.objects.create(content=respuesta_ia, is_user=False)
+            msg_ia = Message.objects.create(content=respuesta_ia, is_user=False)
+            respuesta_html = markdown.markdown(respuesta_ia)
+            
+            return JsonResponse({
+                'success': True,
+                'ai_response': respuesta_html,
+                'timestamp': msg_ia.created_at.strftime("%H:%M")
+            })
+        
+        return JsonResponse({'success': False, 'error': 'No content'})
 
     messages = Message.objects.all().order_by('created_at')
 
     # Obtener la configuración del asistente
-    config = AsistenteConfig.objects.first()
-    if not config:
-        config = AsistenteConfig(nombre="Asistente Virtual", imagen=None)
-
+    
     return render(request, 'chat/chat.html', {
         'messages': messages,
         'config': config

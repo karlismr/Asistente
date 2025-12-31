@@ -8,7 +8,7 @@
     <img
       src="{{ config.imagen.url }}"
       alt="avatar"
-      class="w-10 h-10 rounded-full bg-white p-1"
+      class="w-10 h-10 rounded-full bg-white p-1 object-cover"
     />
     {% else %}
     <img
@@ -27,21 +27,29 @@
 </div>
 
 <!--  MENSAJES DEL CHAT -->
-<div id="chat-box" class="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+<div id="chat-box" class="flex-1 overflow-y-auto px-4 py-2 space-y-4 scroll-smooth">
   {% for message in messages %} {% if forloop.counter|divisibleby:2 %}
+  
   <!-- Bot -->
+   <span class="text-xs text-gray-500 block mt-1">
+        {{ message.created_at |date:"SHORT_DATETIME_FORMAT" }}
+      </span> 
   <div class="flex items-start">
     <div
-      class="bg-white text-gray-800 px-4 py-2 rounded-xl shadow w-fit max-w-xs"
+      class="bg-white text-gray-800 px-4 py-2 rounded-xl shadow w-fit max-w-[85%] prose prose-sm"
     >
       {{ message.content | markdown | safe }}
+      
     </div>
   </div>
   {% else %}
   <!-- Usuario -->
-  <div class="flex justify-end">
+  <div class="flex flex-col items-end">
+  <span class="text-xs text-gray-500 block mt-1">
+        {{ message.created_at |date:"SHORT_DATETIME_FORMAT" }}
+      </span> 
     <div
-      class="bg-purple-500 text-white px-4 py-2 rounded-xl shadow w-fit max-w-xs"
+      class="bg-purple-500 text-white px-4 py-2 rounded-xl rounded-tr-none shadow w-fit max-w-[85%]"
     >
       {{ message.content | markdown | safe}}
     </div>
@@ -49,8 +57,19 @@
   {% endif %} {% endfor %}
 </div>
 
+<!-- Indicador de "pensando" -->
+<div id="think-indicator" class="hidden  flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
+     <div class="flex space-x-1">
+        <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+        <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-75"></div>
+        <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-150"></div>
+    </div>
+    <span>Escribiendo...</span>
+</div>
+
+
 <!--  CAMPO DE TEXTO -->
-<form method="post" class="flex items-center p-2 bg-white shadow-inner">
+<form id="message-form" method="post" class="flex items-center p-2 bg-white shadow-inner">
   {% csrf_token %}
   <input
     name="content"
@@ -60,13 +79,122 @@
     class="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
   />
   <button type="submit" class="ml-2 text-purple-600 hover:text-purple-800">
-    📤
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+    </svg>
   </button>
 </form>
 
 <!-- Scroll automático al final -->
 <script>
-  const chatBox = document.getElementById("chat-box");
-  chatBox.scrollTop = chatBox.scrollHeight;
+  // MODIFICACIÓN: Envolvimos todo en DOMContentLoaded. 
+  // Esto asegura que el HTML exista antes de intentar buscar 'chatBox' o 'form', evitando errores nulos.
+  document.addEventListener("DOMContentLoaded", function() {
+      // CORRECCIÓN CRÍTICA: Eliminé la segunda declaración de 'chatBox' que tenías en otro script.
+      // Ahora todas las variables se declaran una sola vez aquí.
+      const chatBox = document.getElementById("chat-box");
+      const form = document.getElementById("message-form");
+      const thinkIndicator = document.getElementById("think-indicator");
+      const input = form.querySelector("input[name='content']");
+      const btn = form.querySelector("button");
+
+      // MODIFICACIÓN: Función reutilizable para el scroll.
+      const scrollToBottom = () => {
+          chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      scrollToBottom();
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault(); 
+
+        const message = input.value.trim();
+        const csrfToken = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        if (!message) return;
+
+        // 1. DIBUJAR MENSAJE DEL USUARIO
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+
+        // MODIFICACIÓN: Agregué 'animate-fade-in' para que el mensaje aparezca suavemente.
+        chatBox.innerHTML += `
+          <div class="flex flex-col items-end animate-fade-in">
+             <span class="text-xs text-gray-400 block mb-1 mr-1">${timeString}</span> 
+             <div class="bg-purple-500 text-white px-4 py-2 rounded-xl rounded-tr-none shadow w-fit max-w-[85%]">
+               ${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+             </div>
+          </div>
+        `;
+        
+        input.value = "";
+        scrollToBottom();
+
+        thinkIndicator.classList.remove("hidden");
+        btn.disabled = true;
+        btn.classList.add("opacity-50"); // Efecto visual de deshabilitado
+
+        try {
+          const formData = new FormData();
+          formData.append("content", message);
+          formData.append("csrfmiddlewaretoken", csrfToken);
+
+          const response = await fetch("", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // CORRECCIÓN CRÍTICA: Ya no usamos .replace(/\n/g, "<br>") manualmente.
+            // Ahora insertamos data.ai_response DIRECTAMENTE porque views.py ya nos manda HTML válido.
+            // También agregamos la clase 'prose' aquí para los estilos dinámicos.
+            chatBox.innerHTML += `
+               <div class="animate-fade-in">
+                    <span class="text-xs text-gray-400 block mb-1 ml-1">${data.timestamp}</span> 
+                    <div class="flex items-start">
+                        <div class="bg-white text-gray-800 px-4 py-2 rounded-xl rounded-tl-none shadow w-fit max-w-[85%] prose prose-sm">
+                        ${data.ai_response}
+                        </div>
+                    </div>
+               </div>
+            `;
+          } else {
+            alert("Error: " + data.error);
+          }
+
+        } catch (error) {
+          console.error(error);
+          alert("Error de conexión");
+        } finally {
+          thinkIndicator.classList.add("hidden");
+          btn.disabled = false;
+          btn.classList.remove("opacity-50");
+          scrollToBottom();
+          input.focus(); // MODIFICACIÓN: Devolvemos el foco al input para seguir escribiendo rápido.
+        }
+      });
+  });
 </script>
+
+<!-- MODIFICACIÓN: Estilos CSS añadidos -->
+<style>
+    /* Animación suave para nuevos mensajes */
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* MODIFICACIÓN: Clases .prose para asegurar que el Markdown (listas, negritas) se vea bien.
+       Esto es necesario porque Tailwind CSS resetea los estilos por defecto de ul, ol, strong, etc. */
+    .prose ul { list-style-type: disc; padding-left: 1.25rem; }
+    .prose ol { list-style-type: decimal; padding-left: 1.25rem; }
+    .prose strong { font-weight: 700; color: #4b5563; }
+    .prose p { margin-bottom: 0.5rem; }
+    .prose p:last-child { margin-bottom: 0; }
+</style>
 {% endblock %}

@@ -5,7 +5,7 @@ from django.conf import settings # Para leer la API Key desde settings.py
 # Configurar Gemini con la clave de API
 try:
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash-lite')
     print("Modelo Gemini configurado exitosamente.")
 except Exception as e:
     print(f"ERROR: No se pudo configurar Gemini. Revisa tu API_KEY. Error: {e}")
