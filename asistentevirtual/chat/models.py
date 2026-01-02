@@ -17,3 +17,11 @@ class AsistenteConfig(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class Recordatorio(models.Model):
+    titulo = models.CharField(max_length=200)
+    fecha = models.CharField(max_length=100) 
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.titulo} - {self.fecha}"   

@@ -1,0 +1,6 @@
+{
+  "terminal.integrated.cwd": "${workspaceFolder}/asistentevirtual",
+
+  // Ayuda a que VS Code detecte bien las importaciones de Python
+  "python.analysis.extraPaths": ["${workspaceFolder}/asistentevirtual"]
+}
