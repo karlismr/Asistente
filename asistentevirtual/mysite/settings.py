@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     "tailwind",
     "tw_theme",
     'chat',
-    'django_browser_reload'
+    'django_browser_reload',
+    'django_q'
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,20 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+Q_CLUSTER = {
+    'name': 'mi_proyecto_motor',
+    'workers': 4,
+    'recycle': 500,
+    'timeout': 300, #TENGO QUE CALCULARLO (VIENDO EN EL ADMIN DE DJANGO)
+    'retry': 310,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'orm': 'default' 
+}
 
 
 # Internationalization

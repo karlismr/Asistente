@@ -20,8 +20,9 @@ class AsistenteConfig(models.Model):
 
 class Recordatorio(models.Model):
     titulo = models.CharField(max_length=200)
-    fecha = models.CharField(max_length=100) 
+    fecha = models.DateTimeField() 
     creado_en = models.DateTimeField(auto_now_add=True)
+    notificado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.titulo} - {self.fecha}"   
