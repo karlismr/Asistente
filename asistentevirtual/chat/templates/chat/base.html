@@ -33,5 +33,15 @@
         });
       }
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Importante: la ruta debe ser donde Render sirve tus estáticos
+                navigator.serviceWorker.register('/static/sw.js')
+                .then(res => console.log("Service worker registrado"))
+                .catch(err => console.log("Service worker no registrado", err));
+            });
+        }
+    </script>
   </body>
 </html>

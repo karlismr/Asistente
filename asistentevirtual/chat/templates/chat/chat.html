@@ -57,7 +57,7 @@
   {% endif %} {% endfor %}
 </div>
 
-<!-- Indicador de "pensando" -->
+<!-- Indicador de "escribiendo" -->
 <div id="think-indicator" class="hidden  flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
      <div class="flex space-x-1">
         <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
@@ -87,18 +87,13 @@
 
 <!-- Scroll automático al final -->
 <script>
-  // MODIFICACIÓN: Envolvimos todo en DOMContentLoaded. 
-  // Esto asegura que el HTML exista antes de intentar buscar 'chatBox' o 'form', evitando errores nulos.
   document.addEventListener("DOMContentLoaded", function() {
-      // CORRECCIÓN CRÍTICA: Eliminé la segunda declaración de 'chatBox' que tenías en otro script.
-      // Ahora todas las variables se declaran una sola vez aquí.
       const chatBox = document.getElementById("chat-box");
       const form = document.getElementById("message-form");
       const thinkIndicator = document.getElementById("think-indicator");
       const input = form.querySelector("input[name='content']");
       const btn = form.querySelector("button");
 
-      // MODIFICACIÓN: Función reutilizable para el scroll.
       const scrollToBottom = () => {
           chatBox.scrollTop = chatBox.scrollHeight;
       }
@@ -113,11 +108,10 @@
 
         if (!message) return;
 
-        // 1. DIBUJAR MENSAJE DEL USUARIO
+        // DIBUJAR MENSAJE DEL USUARIO
         const now = new Date();
         const timeString = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
-        // MODIFICACIÓN: Agregué 'animate-fade-in' para que el mensaje aparezca suavemente.
         chatBox.innerHTML += `
           <div class="flex flex-col items-end animate-fade-in">
              <span class="text-xs text-gray-400 block mb-1 mr-1">${timeString}</span> 
@@ -132,7 +126,7 @@
 
         thinkIndicator.classList.remove("hidden");
         btn.disabled = true;
-        btn.classList.add("opacity-50"); // Efecto visual de deshabilitado
+        btn.classList.add("opacity-50"); 
 
         try {
           const formData = new FormData();
@@ -147,9 +141,6 @@
           const data = await response.json();
 
           if (data.success) {
-            // CORRECCIÓN CRÍTICA: Ya no usamos .replace(/\n/g, "<br>") manualmente.
-            // Ahora insertamos data.ai_response DIRECTAMENTE porque views.py ya nos manda HTML válido.
-            // También agregamos la clase 'prose' aquí para los estilos dinámicos.
             chatBox.innerHTML += `
                <div class="animate-fade-in">
                     <span class="text-xs text-gray-400 block mb-1 ml-1">${data.timestamp}</span> 
@@ -172,13 +163,13 @@
           btn.disabled = false;
           btn.classList.remove("opacity-50");
           scrollToBottom();
-          input.focus(); // MODIFICACIÓN: Devolvemos el foco al input para seguir escribiendo rápido.
+          input.focus();
         }
       });
   });
 </script>
 
-<!-- MODIFICACIÓN: Estilos CSS añadidos -->
+
 <style>
     /* Animación suave para nuevos mensajes */
     .animate-fade-in {
