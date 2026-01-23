@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django_browser_reload',
     'django_q',
     'channels',
-    'chat',
 ]
 
 MIDDLEWARE = [
