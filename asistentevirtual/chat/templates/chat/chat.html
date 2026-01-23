@@ -169,9 +169,41 @@
   });
 </script>
 
+<script>
+    // WebSocket para comunicación en tiempo real 
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const chatSocket = new WebSocket(
+        wsScheme + '://' + window.location.host + '/ws/chat/'
+    );
+
+    chatSocket.onopen = function(e) {
+        console.log("Conexión exitosa con el asistente");
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        document.querySelector('#chat-log').innerHTML += (
+            '<div class="mensaje-asistente">' + data.message + '</div>'
+        );
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('El túnel del chat se cerró inesperadamente');
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+        
+        messageInputDom.value = ''; 
+    };
+</script>
 
 <style>
-    /* Animación suave para nuevos mensajes */
     .animate-fade-in {
         animation: fadeIn 0.3s ease-out forwards;
     }
@@ -180,8 +212,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
     
-    /* MODIFICACIÓN: Clases .prose para asegurar que el Markdown (listas, negritas) se vea bien.
-       Esto es necesario porque Tailwind CSS resetea los estilos por defecto de ul, ol, strong, etc. */
     .prose ul { list-style-type: disc; padding-left: 1.25rem; }
     .prose ol { list-style-type: decimal; padding-left: 1.25rem; }
     .prose strong { font-weight: 700; color: #4b5563; }
