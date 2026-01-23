@@ -157,3 +157,7 @@ INTERNAL_IPS = [
 load_dotenv(find_dotenv())
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://asistente-gc68.onrender.com",
+]
