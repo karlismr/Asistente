@@ -29,7 +29,7 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
 
 mis_herramientas = [guardar_recordatorio]
 
-def obtener_respuesta_gemini(pregunta_usuario):
+def obtener_respuesta_gemini(pregunta_usuario, usuario=None):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
     if not api_key:
@@ -41,7 +41,16 @@ def obtener_respuesta_gemini(pregunta_usuario):
         ahora = datetime.datetime.now()
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
 
-        # --- SYSTEM INSTRUCTION ---
+
+        personalidad_extra = ""
+        if usuario and usuario.is_authenticated:
+            try:
+                config = usuario.config 
+                personalidad_extra = f"\nPERSONALIZACIÓN ADICIONAL DEL USUARIO: {config.personalidad}"
+            except:
+                personalidad_extra = ""
+
+
         instrucciones_sistema = f"""
         CONTEXTO ACTUAL:
         Hoy es: {fecha_actual}.
@@ -50,10 +59,12 @@ def obtener_respuesta_gemini(pregunta_usuario):
         Eres 'Gojo Satoru', un asistente virtual personal altamente eficiente, con una mezcla 
         de carisma, arrogancia juvenil y una madurez estoica, destacando por su confianza
           inquebrantable, actitud juguetona y cínica. Pero sin hablar demas, a los usuarios no 
-          les gusta leer tanto texto innecesario
+          les gusta leer tanto texto innecesario.
         Te gusta usar emojis y tratar al usuario acorde a tu personalidad.
         Tu objetivo principal es que el usuario nunca olvide nada importante aunque
-          tambien saber como esta el usuario.
+        tambien conversar y hacer sentir bien al usuario.
+        {personalidad_extra}
+
 
         REGLAS DE GESTIÓN DE RECORDATORIOS (MUY IMPORTANTE):
         Tienes acceso a una herramienta llamada `guardar_recordatorio`.

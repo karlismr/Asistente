@@ -1,0 +1,17 @@
+{% extends 'chat/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Crear Cuenta de Asistente</h2>
+    <p>Regístrate para tener tu propio asistente personalizado.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <button type="submit" class="btn-auth">Registrarse</button>
+    </form>
+    
+    <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+</div>
+{% endblock %}

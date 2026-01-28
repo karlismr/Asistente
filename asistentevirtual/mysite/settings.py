@@ -161,3 +161,5 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 CSRF_TRUSTED_ORIGINS = [
     "https://asistente-gc68.onrender.com",
 ]
+
+LOGOUT_REDIRECT_URL = 'login'

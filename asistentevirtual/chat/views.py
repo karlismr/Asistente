@@ -4,6 +4,9 @@ from django.shortcuts import render, redirect
 from .forms import AsistenteConfigForm
 from .models import AsistenteConfig, Message
 from .gemini_utils import obtener_respuesta_gemini
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 
 def chat_view(request):
 
@@ -41,9 +44,9 @@ def chat_view(request):
         'config': config
     })
 
-
+@login_required
 def configurar_asistente(request):
-    config = AsistenteConfig.objects.first()
+    config, created = AsistenteConfig.objects.get_or_create(user=request.user)
     if not config:
         config = AsistenteConfig.objects.create(nombre="Asistente", imagen=None)
 
@@ -51,8 +54,19 @@ def configurar_asistente(request):
         form = AsistenteConfigForm(request.POST, request.FILES, instance=config)
         if form.is_valid():
             form.save()
-            return redirect('configurar_asistente')  # Redirige después de guardar
+            return redirect('chat_view') 
     else:
         form = AsistenteConfigForm(instance=config)
 
     return render(request, 'chat/configurar_asistente.html', {'form': form})
+
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) # Inicia sesión automáticamente al registrarse
+            return redirect('chat') # Cambia 'chat' por el nombre de tu url del chat
+    else:
+        form = UserCreationForm()
+    return render(request, 'chat/registro.html', {'form': form})

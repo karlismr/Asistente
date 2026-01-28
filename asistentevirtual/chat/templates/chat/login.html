@@ -1,0 +1,17 @@
+{% extends 'chat/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Iniciar Sesión</h2>
+    <p>Ingresa para acceder a tus chats y configuraciones.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <button type="submit" class="btn-auth">Entrar</button>
+    </form>
+    
+    <p>¿No tienes cuenta? <a href="{% url 'registro' %}">Crea una aquí</a></p>
+</div>
+{% endblock %}

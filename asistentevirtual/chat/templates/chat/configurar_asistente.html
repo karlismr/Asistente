@@ -48,4 +48,19 @@
     >
   </div>
 </div>
+
+<hr class="my-6 border-gray-300"> 
+
+<div class="account-settings text-center bg-white p-4 rounded-lg shadow-inner">
+    <h3 class="text-lg font-semibold text-gray-700">Ajustes de Cuenta</h3>
+    <p class="text-sm text-gray-600 mb-4">Sesión iniciada como: <strong>{{ user.username }}</strong></p>
+    
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="w-full py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 shadow-md">
+            Cerrar Sesión
+        </button>
+    </form>
+</div>
+
 {% endblock %}
