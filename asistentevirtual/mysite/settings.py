@@ -162,4 +162,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://asistente-gc68.onrender.com",
 ]
 
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = '/chat/login/'
+LOGIN_REDIRECT_URL = '/chat/'
+LOGOUT_REDIRECT_URL = '/chat/login/'
