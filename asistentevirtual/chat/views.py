@@ -12,7 +12,7 @@ def chat_view(request):
 
     config = AsistenteConfig.objects.first()
     if not config:
-        config = AsistenteConfig(nombre="Asistente Virtual", imagen=None)
+        config = AsistenteConfig(nombre="Satoru Gojo", imagen=None)
 
     if request.method == 'POST':
         content = request.POST.get('content')
@@ -66,7 +66,7 @@ def registro(request):
         if form.is_valid():
             user = form.save()
             login(request, user) # Inicia sesión automáticamente al registrarse
-            return redirect('chat') # Cambia 'chat' por el nombre de tu url del chat
+            return redirect('chat_view') 
     else:
         form = UserCreationForm()
     return render(request, 'chat/registro.html', {'form': form})
