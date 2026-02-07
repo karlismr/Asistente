@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import chat_view, configurar_asistente, admin 
+from .views import chat_view, configurar_asistente
 from django.contrib.auth import views as auth_views
 from . import views 
+from django.contrib import admin
 
 urlpatterns = [
     path('', chat_view, name='chat_view'),
