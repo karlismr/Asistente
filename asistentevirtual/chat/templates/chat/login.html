@@ -1,17 +1,22 @@
 {% extends 'chat/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="auth-container">
-    <h2>Iniciar Sesión</h2>
-    <p>Ingresa para acceder a tus chats y configuraciones.</p>
+    <h2 class="auth-title">Iniciar Sesión</h2>
+    <p style="text-align: center; color: #4b5563; font-size: 0.9rem; margin-bottom: 20px;">
+        Ingresa para acceder a tus chats y configuraciones.
+    </p>
     
-    <form method="post">
+    <form method="post" class="auth-form">
         {% csrf_token %}
         {{ form.as_p }}
         
-        <button type="submit" class="btn-auth">Entrar</button>
+        <button type="submit" class="btn-primary-custom">Entrar</button>
     </form>
     
-    <p>¿No tienes cuenta? <a href="{% url 'registro' %}">Crea una aquí</a></p>
+    <div class="auth-footer">
+        ¿No tienes cuenta? <a href="{% url 'registro' %}">Crea una aquí</a>
+    </div>
 </div>
 {% endblock %}

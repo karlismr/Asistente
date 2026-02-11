@@ -1,17 +1,22 @@
 {% extends 'chat/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="auth-container">
-    <h2>Crear Cuenta de Asistente</h2>
-    <p>Regístrate para tener tu propio asistente personalizado.</p>
+    <h2 class="auth-title">Crear Cuenta</h2>
+    <p style="text-align: center; color: #4b5563; font-size: 0.9rem; margin-bottom: 20px;">
+        Regístrate para tener tu propio asistente personalizado.
+    </p>
     
-    <form method="post">
+    <form method="post" class="auth-form">
         {% csrf_token %}
         {{ form.as_p }}
         
-        <button type="submit" class="btn-auth">Registrarse</button>
+        <button type="submit" class="btn-primary-custom">Registrarse</button>
     </form>
     
-    <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+    <div class="auth-footer">
+        ¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a>
+    </div>
 </div>
 {% endblock %}

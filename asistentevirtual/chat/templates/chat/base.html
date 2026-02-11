@@ -7,6 +7,8 @@
     
     <title>{% block title %}Asistente{% endblock %}</title>
 
+    <link rel="stylesheet" type="text/css" href="{% static 'chat/css/style.css' %}" />
+
     <link rel="manifest" href="/manifest.json" />
    
     <link rel="icon" href="{% static 'icons/icon-192.png' %}" />
@@ -19,29 +21,20 @@
     {% block extra_head %}{% endblock %}
   </head>
   
-  <body class="bg-purple-100 h-screen flex flex-col">
-  
-    {% block content %}{% endblock %}
+  <body class="bg-gray-50 h-screen flex flex-col">
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- SCRIPT SERVICE WORKER -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener('load', function() {
+            // Usamos una sola ruta clara para el Service Worker
             navigator.serviceWorker.register("/serviceworker.js")
                 .then(function(reg) { console.log("Service Worker registrado!", reg.scope); })
                 .catch(function(err) { console.log("Error Service Worker:", err); });
         });
       }
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // Importante: la ruta debe ser donde Render sirve tus estáticos
-                navigator.serviceWorker.register('/static/sw.js')
-                .then(res => console.log("Service worker registrado"))
-                .catch(err => console.log("Service worker no registrado", err));
-            });
-        }
     </script>
   </body>
 </html>

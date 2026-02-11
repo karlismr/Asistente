@@ -1,66 +1,58 @@
-{% extends 'chat/base.html' %} 
-{% load static %} 
+{% extends 'chat/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-xl mx-auto mt-10 p-6 bg-gradient-to-bl from-violet-300 to-fuchsia-300 rounded-xl shadow-lg">
-  <h2 class="text-2xl font-bold mb-4 text-center">Configurar Asistente</h2>
+<div class="auth-container">
+    <h2 class="auth-title">Configurar Asistente</h2>
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-4">
-    {% csrf_token %}
-
-    <div>
-      <label class="block text-sm font-medium text-gray-800 mb-1"
-        >Nombre del Asistente:</label
-      >
-      {{ form.nombre }}
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-800 mb-1"
-        >Imagen del Asistente:</label
-      >
-      {{ form.imagen }} {% if form.instance.imagen %}
-      <div class="mt-4">
-        <p class="text-sm text-gray-600 mb-1">Imagen actual:</p>
-        <img
-          src="{{ form.instance.imagen.url }}"
-          alt="Asistente"
-          class="w-24 h-24 object-cover rounded-full mx-auto border"
-        />
-      </div>
-      {% endif %}
-    </div>
-
-    <div class="text-center mt-6">
-      <button
-        type="submit"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        Guardar Cambios
-      </button>
-    </div>
-  </form>
-
-  <div class="text-center mt-6">
-    <a
-      href="{% url 'chat_view' %}"
-      class="text-sm text-gray-600 hover:underline"
-      >← Volver al chat</a
-    >
-  </div>
-</div>
-
-<hr class="my-6 border-gray-300"> 
-
-<div class="account-settings text-center bg-white p-4 rounded-lg shadow-inner">
-    <h3 class="text-lg font-semibold text-gray-700">Ajustes de Cuenta</h3>
-    <p class="text-sm text-gray-600 mb-4">Sesión iniciada como: <strong>{{ user.username }}</strong></p>
-    
-    <form action="{% url 'logout' %}" method="post">
+    <form method="POST" enctype="multipart/form-data" class="auth-form">
         {% csrf_token %}
-        <button type="submit" class="w-full py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition duration-300 shadow-md">
-            Cerrar Sesión
-        </button>
-    </form>
-</div>
 
+        <div>
+            <label>Nombre del Asistente:</label>
+            {{ form.nombre }}
+        </div>
+
+        <div>
+            <label>Personalidad del Asistente:</label>
+            {{ form.personalidad }}
+            <p style="font-size: 0.75rem; color: #4b5563; margin-top: 5px;">
+                Escribe cómo quieres que se comporte (ej: "Eres un pirata gracioso").
+            </p>
+        </div>
+
+        <div>
+            <label>Imagen del Asistente:</label>
+            {{ form.imagen }}
+            
+            {% if form.instance.imagen %}
+            <div style="text-align: center; margin-top: 15px;">
+                <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Imagen actual:</p>
+                <img src="{{ form.instance.imagen.url }}" 
+                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid white; shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary-custom">Guardar Cambios</button>
+    </form>
+
+    <div class="auth-footer">
+        <a href="{% url 'chat_view' %}">← Volver al chat</a>
+    </div>
+
+    <hr style="margin: 25px 0; border: 0; border-top: 1px solid #d1d5db;">
+
+    <div style="background: rgba(255, 255, 255, 0.5); padding: 20px; border-radius: 12px; text-align: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; color: #374151; margin-bottom: 5px;">Ajustes de Cuenta</h3>
+        <p style="font-size: 0.85rem; color: #4b5563; margin-bottom: 15px;">
+            Sesión iniciada como: <strong>{{ user.username }}</strong>
+        </p>
+        
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-logout">Cerrar Sesión</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

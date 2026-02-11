@@ -4,8 +4,11 @@ from .models import AsistenteConfig
 class AsistenteConfigForm(forms.ModelForm):
     class Meta:
         model = AsistenteConfig
-        fields = ['nombre', 'imagen']
-
+        fields = ['nombre', 'personalidad', 'imagen']
+        widgets = {
+            'personalidad': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Ej: Eres un asistente experto en cocina...'}),
+        }
+        
     def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             
