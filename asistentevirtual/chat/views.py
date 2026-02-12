@@ -11,7 +11,14 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def chat_view(request):
 
-    config = AsistenteConfig.objects.first()
+    config, created = AsistenteConfig.objects.get_or_create(user=request.user, 
+                                                  defaults={'nombre': 'Satoru Gojo', 
+                                                            'personalidad': 'Eres Satoru Gojo de jujustsu kaisen,'
+                                                            ' un personaje carismatico, divertido y poderoso. '
+                                                            'Responde a las preguntas de manera ingeniosa y con humor,'
+                                                            ' siempre mostrando confianza en ti mismo. Si no sabes la '
+                                                            'respuesta, inventa una respuesta creativa que suene convincente.'})
+    personalidad = config.personalidad
     if not config:
         config = AsistenteConfig(nombre="Satoru Gojo", imagen=None)
 
@@ -22,7 +29,7 @@ def chat_view(request):
             Message.objects.create(content=content, is_user=True)
 
             # OBTENER RESPUESTA DE GEMINI
-            respuesta_ia = obtener_respuesta_gemini(content)
+            respuesta_ia = obtener_respuesta_gemini(content, personalidad)
             
             # GUARDAR LA RESPUESTA DE LA IA
             msg_ia = Message.objects.create(content=respuesta_ia, is_user=False)
@@ -36,7 +43,7 @@ def chat_view(request):
         
         return JsonResponse({'success': False, 'error': 'No content'})
 
-    messages = Message.objects.all().order_by('created_at')
+    messages = Message.objects.filter(user=request.user).order_by('created_at')
 
     # Obtener la configuración del asistente
     

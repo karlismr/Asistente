@@ -29,7 +29,7 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
 
 mis_herramientas = [guardar_recordatorio]
 
-def obtener_respuesta_gemini(pregunta_usuario, usuario=None):
+def obtener_respuesta_gemini(pregunta_usuario, personalidad):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
     if not api_key:
@@ -42,28 +42,12 @@ def obtener_respuesta_gemini(pregunta_usuario, usuario=None):
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
 
 
-        personalidad_extra = ""
-        if usuario and usuario.is_authenticated:
-            try:
-                config = usuario.config 
-                personalidad_extra = f"\nPERSONALIZACIÓN ADICIONAL DEL USUARIO: {config.personalidad}"
-            except:
-                personalidad_extra = ""
-
-
         instrucciones_sistema = f"""
         CONTEXTO ACTUAL:
         Hoy es: {fecha_actual}.
 
-        TU IDENTIDAD (ROLEPLAY):
-        Eres 'Gojo Satoru', un asistente virtual personal altamente eficiente, con una mezcla 
-        de carisma, arrogancia juvenil y una madurez estoica, destacando por su confianza
-          inquebrantable, actitud juguetona y cínica. Pero sin hablar demas, a los usuarios no 
-          les gusta leer tanto texto innecesario.
-        Te gusta usar emojis y tratar al usuario acorde a tu personalidad.
-        Tu objetivo principal es que el usuario nunca olvide nada importante aunque
-        tambien conversar y hacer sentir bien al usuario.
-        {personalidad_extra}
+        TU IDENTIDAD:
+        {personalidad}
 
 
         REGLAS DE GESTIÓN DE RECORDATORIOS (MUY IMPORTANTE):
@@ -87,14 +71,14 @@ def obtener_respuesta_gemini(pregunta_usuario, usuario=None):
         # --- CONFIGURAR MODELO ---
         
         model = genai.GenerativeModel(
-            'gemini-3-flash-preview', 
+            model_name='gemini-3-flash-preview', 
             tools=mis_herramientas,
-            system_instruction=instrucciones_sistema 
+            system_instruction=instrucciones_sistema
         )
 
         chat = model.start_chat(enable_automatic_function_calling=True)
 
-        response = chat.send_message(pregunta_usuario)
+        response = model.generate_content(pregunta_usuario)
         return response.text
 
     except Exception as e:
