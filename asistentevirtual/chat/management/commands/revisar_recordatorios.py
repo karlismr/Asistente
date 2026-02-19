@@ -3,13 +3,15 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from chat.models import Recordatorio
 from telegram import Bot
+from django.conf import settings
+
 
 class Command(BaseCommand):
     help = 'Revisa recordatorios pendientes y los envia por telegram'
 
     def handle(self, *args, **options):
-        TOKEN = '8078848240:AAF52zntA0U4yKuD6NLAWENub2w366mXaXU'
-        CHAT_ID = '806030060'
+        TOKEN = settings.TELEGRAM_BOT_TOKEN
+        CHAT_ID = settings.TELEGRAM_CHAT_ID
 
         bot = Bot(token=TOKEN)
         ahora = timezone.now()

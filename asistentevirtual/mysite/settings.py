@@ -13,6 +13,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 import os
+import environ
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+TOKEN = env('TELEGRAM_BOT_TOKEN')
+CHAT_ID = env('TELEGRAM_CHAT_ID')
+CLAVE_SECRETA = env('CLAVE_SECRETA')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -160,6 +170,8 @@ INTERNAL_IPS = [
 load_dotenv(find_dotenv())
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+
+
 
 CSRF_TRUSTED_ORIGINS = [
     "https://asistente-gc68.onrender.com",

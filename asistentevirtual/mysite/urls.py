@@ -20,12 +20,15 @@ from django.views.generic import RedirectView, TemplateView
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from chat.views import ejecutar_revision_cron
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
      path('chat/', include('chat.urls')),
      path('login/', auth_views.LoginView.as_view(template_name='chat/login.html'), name='login'),
       path('', RedirectView.as_view(url='/chat/', permanent=False)),
+      path('ejecutar-cron-secreto/', ejecutar_revision_cron, name='cron_notificaciones'),
 
       path('manifest.json', TemplateView.as_view(
         template_name='manifest.json', 

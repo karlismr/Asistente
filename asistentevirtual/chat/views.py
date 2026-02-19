@@ -7,6 +7,8 @@ from .gemini_utils import obtener_respuesta_gemini
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from .management.commands.revisar_recordatorios import Command as RevisarCommand
+from django.conf import settings
 
 @login_required
 def chat_view(request):
@@ -78,3 +80,27 @@ def registro(request):
     else:
         form = UserCreationForm()
     return render(request, 'chat/registro.html', {'form': form})
+
+def ejecutar_revision_cron(request):
+    CLAVE_SECRETA = settings.CLAVE_SECRETA
+    
+    token_recibido = request.GET.get('key')
+    
+    if token_recibido == CLAVE_SECRETA:
+        try:
+            comando = RevisarCommand()
+            comando.handle() 
+            return JsonResponse({
+                "estado": "exito",
+                "mensaje": "Recordatorios revisados y notificaciones enviadas."
+            })
+        except Exception as e:
+            return JsonResponse({
+                "estado": "error",
+                "mensaje": str(e)
+            }, status=500)
+    else:
+        return JsonResponse({
+            "estado": "error",
+            "mensaje": "No autorizado"
+        }, status=403)
