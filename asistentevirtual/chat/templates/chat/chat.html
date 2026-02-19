@@ -144,6 +144,7 @@
               const errorText = await response.text(); // Leemos el error para saber qué pasó
               console.error("Error del servidor:", errorText);
               throw new Error("El servidor respondió con un error (500). Revisa los logs de Render.");
+          }
 
           const data = await response.json();
 
