@@ -28,13 +28,15 @@ def chat_view(request):
         content = request.POST.get('content')
         if content:
             # Guardar el mensaje del USUARIO
-            Message.objects.create(content=content, is_user=True)
+            Message.objects.create(content=content, is_user=True, user=request.user)
 
             # OBTENER RESPUESTA DE GEMINI
             respuesta_ia = obtener_respuesta_gemini(content, personalidad)
+            if not respuesta_ia:
+             respuesta_ia = "¡Entendido! Ya he anotado eso en tus recordatorios. 😎"
             
             # GUARDAR LA RESPUESTA DE LA IA
-            msg_ia = Message.objects.create(content=respuesta_ia, is_user=False)
+            msg_ia = Message.objects.create(content=respuesta_ia, is_user=False, user=request.user)
             respuesta_html = markdown.markdown(respuesta_ia)
             
             return JsonResponse({
