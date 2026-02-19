@@ -20,12 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-TOKEN = env('TELEGRAM_BOT_TOKEN')
-CHAT_ID = env('TELEGRAM_CHAT_ID')
+TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = env('TELEGRAM_CHAT_ID')
 CLAVE_SECRETA = env('CLAVE_SECRETA')
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
