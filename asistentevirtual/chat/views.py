@@ -1,9 +1,11 @@
 import markdown
-import requests
+import json
+from django.utils import timezone
+from datetime import datetime
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .forms import AsistenteConfigForm
-from .models import AsistenteConfig, Message
+from .models import AsistenteConfig, Message, Recordatorio
 from .gemini_utils import obtener_respuesta_gemini
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -13,17 +15,15 @@ from django.conf import settings
 
 @login_required
 def chat_view(request):
-
-    config, created = AsistenteConfig.objects.get_or_create(user=request.user, 
-                                                  defaults={'nombre': 'Satoru Gojo', 
-                                                            'personalidad': 'Eres Satoru Gojo de jujustsu kaisen,'
-                                                            ' un personaje carismatico, divertido y poderoso. '
-                                                            'Responde a las preguntas de manera ingeniosa y con humor,'
-                                                            ' siempre mostrando confianza en ti mismo. Si no sabes la '
-                                                            'respuesta, inventa una respuesta creativa que suene convincente.'})
+    # Configuración del asistente
+    config, created = AsistenteConfig.objects.get_or_create(
+        user=request.user, 
+        defaults={
+            'nombre': 'Satoru Gojo', 
+            'personalidad': 'Eres Satoru Gojo de jujustsu kaisen, un personaje carismatico, divertido y poderoso. Responde a las preguntas de manera ingeniosa y con humor, siempre mostrando confianza en ti mismo.'
+        }
+    )
     personalidad = config.personalidad
-    if not config:
-        config = AsistenteConfig(nombre="Satoru Gojo", imagen=None)
 
     if request.method == 'POST':
         content = request.POST.get('content')
@@ -31,13 +31,18 @@ def chat_view(request):
             # Guardar el mensaje del USUARIO
             Message.objects.create(content=content, is_user=True, user=request.user)
 
-            if "recordar" in content.lower() or "anota" in content.lower():
-                from .models import Recordatorio
-                Recordatorio.objects.create(
-                    user=request.user,
-                    texto=content,
-                    completado=False 
-                )
+            # Lógica de Recordatorios (Detectar palabras clave)
+            palabras_clave = ["recordar", "anota", "agenda", "recuerda", "recuérdame"]
+            if any(p in content.lower() for p in palabras_clave):
+                try:
+                    Recordatorio.objects.create(
+                        user=request.user,
+                        titulo=content[:200],
+                        fecha=timezone.now(), 
+                        notificado=False
+                    )
+                except Exception as e:
+                    print(f"Error al guardar recordatorio: {e}")
 
             # OBTENER RESPUESTA DE GEMINI
             respuesta_ia = obtener_respuesta_gemini(content, personalidad)
@@ -56,21 +61,18 @@ def chat_view(request):
         
         return JsonResponse({'success': False, 'error': 'No content'})
 
+    # Cargar historial de mensajes para el GET
     messages = Message.objects.filter(user=request.user).order_by('created_at')
-
-    # Obtener la configuración del asistente
     
     return render(request, 'chat/chat.html', {
         'messages': messages,
         'config': config
     })
 
+
 @login_required
 def configurar_asistente(request):
     config, created = AsistenteConfig.objects.get_or_create(user=request.user)
-    if not config:
-        config = AsistenteConfig.objects.create(nombre="Asistente", imagen=None)
-
     if request.method == 'POST':
         form = AsistenteConfigForm(request.POST, request.FILES, instance=config)
         if form.is_valid():
@@ -78,7 +80,6 @@ def configurar_asistente(request):
             return redirect('chat_view') 
     else:
         form = AsistenteConfigForm(instance=config)
-
     return render(request, 'chat/configurar_asistente.html', {'form': form})
 
 def registro(request):
@@ -86,32 +87,19 @@ def registro(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user) # Inicia sesión automáticamente al registrarse
+            login(request, user)
             return redirect('chat_view') 
     else:
         form = UserCreationForm()
     return render(request, 'chat/registro.html', {'form': form})
 
 def ejecutar_revision_cron(request):
-    CLAVE_SECRETA = settings.CLAVE_SECRETA
-    
     token_recibido = request.GET.get('key')
-    
-    if token_recibido == CLAVE_SECRETA:
+    if token_recibido == settings.CLAVE_SECRETA:
         try:
             comando = RevisarCommand()
             comando.handle() 
-            return JsonResponse({
-                "estado": "exito",
-                "mensaje": "Recordatorios revisados y notificaciones enviadas."
-            })
+            return JsonResponse({"estado": "exito", "mensaje": "Recordatorios revisados."})
         except Exception as e:
-            return JsonResponse({
-                "estado": "error",
-                "mensaje": str(e)
-            }, status=500)
-    else:
-        return JsonResponse({
-            "estado": "error",
-            "mensaje": "No autorizado"
-        }, status=403)
+            return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
+    return JsonResponse({"estado": "error", "mensaje": "No autorizado"}, status=403)
