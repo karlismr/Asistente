@@ -37,9 +37,9 @@ SECRET_KEY = 'django-insecure-v9m*dcno2wh_^4+sj)=%kuqrrf20w(2ah_o34=37uz$#rgnvj*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["asistente-gc68.onrender.com/chat/", "127.0.0.1", "localhost"] 
+ALLOWED_HOSTS = ["asistente-gc68.onrender.com", "127.0.0.1", "localhost"] 
 
-CSRF_TRUSTED_ORIGINS = ['https://asistente-gc68.onrender.com/chat/']
+CSRF_TRUSTED_ORIGINS = ['https://asistente-gc68.onrender.com']
 
 
 # Application definition
