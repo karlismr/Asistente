@@ -41,11 +41,16 @@ def chat_view(request):
                         fecha=timezone.now(), 
                         notificado=False
                     )
+                    print("DEBUG: ¡Recordatorio guardado con éxito en Neon!")
                 except Exception as e:
-                    print(f"Error al guardar recordatorio: {e}")
+                    print(f"DEBUG ERROR BASE DE DATOS: {e}")
 
             # OBTENER RESPUESTA DE GEMINI
-            respuesta_ia = obtener_respuesta_gemini(content, personalidad)
+            try:
+                respuesta_ia = obtener_respuesta_gemini(content, personalidad)
+            except Exception as e:
+                print(f"DEBUG ERROR GEMINI: {e}")
+                respuesta_ia = "Lo siento, no pude procesar tu solicitud. 😕"
             if not respuesta_ia:
                 respuesta_ia = "¡Entendido! Ya he anotado eso en tus recordatorios. 😎"
             
