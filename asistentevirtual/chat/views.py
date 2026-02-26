@@ -1,4 +1,5 @@
 import markdown
+import requests
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .forms import AsistenteConfigForm
@@ -30,10 +31,18 @@ def chat_view(request):
             # Guardar el mensaje del USUARIO
             Message.objects.create(content=content, is_user=True, user=request.user)
 
+            if "recordar" in content.lower() or "anota" in content.lower():
+                from .models import Recordatorio
+                Recordatorio.objects.create(
+                    user=request.user,
+                    texto=content,
+                    completado=False 
+                )
+
             # OBTENER RESPUESTA DE GEMINI
             respuesta_ia = obtener_respuesta_gemini(content, personalidad)
             if not respuesta_ia:
-             respuesta_ia = "¡Entendido! Ya he anotado eso en tus recordatorios. 😎"
+                respuesta_ia = "¡Entendido! Ya he anotado eso en tus recordatorios. 😎"
             
             # GUARDAR LA RESPUESTA DE LA IA
             msg_ia = Message.objects.create(content=respuesta_ia, is_user=False, user=request.user)
