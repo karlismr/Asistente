@@ -1,9 +1,11 @@
 
-import google.generativeai as genai
+import traceback
 from django.conf import settings 
 import logging
 import datetime 
 from .models import Recordatorio
+from google import genai 
+from google.genai import types
 
 
 logger = logging.getLogger(__name__)
@@ -24,19 +26,20 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
         )
         print(f"--- RECORDATORIO AGENDADO: '{actividad}' para '{fecha_recordatorio}' ---")
         return f"Genial: Recordatorio guardado para {fecha_recordatorio}."
-    except Exception as e:
-        return f"Error al guardar: {str(e)}"
+    except Exception:
+        error_db = traceback.format_exc() # Captura el error exacto de la DB
+        logger.error(f"Error al escribir en Neon: {error_db}")
+        return f"Error técnico al guardar en base de datos."
 
-mis_herramientas = [guardar_recordatorio]
 
 def obtener_respuesta_gemini(pregunta_usuario, personalidad):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
     if not api_key:
-        return "Error: Falta la API KEY."
+        return "Error: No se encontro la API KEY en settings.py."
 
     try:
-        genai.configure(api_key=api_key)
+        client = genai.Client(api_key=api_key)
         
         ahora = datetime.datetime.now()
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
@@ -69,23 +72,28 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad):
         """
 
         # --- CONFIGURAR MODELO ---
-        
-        model = genai.GenerativeModel(
-            model_name='gemini-3-flash-preview', 
-            tools=mis_herramientas,
-            system_instruction=instrucciones_sistema
+        config = types.GenerateContentConfig(
+            system_instruction=instrucciones_sistema,
+            tools=[guardar_recordatorio],
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False),
+            temperature=0.7
         )
 
-        chat = model.start_chat(enable_automatic_function_calling=True)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash', 
+            contents=pregunta_usuario,
+            config=config
+        )
 
-        response = model.generate_content(pregunta_usuario)
         return response.text
 
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error Gemini: {error_message}")
-
-        if "429" in error_message or "Quota exceeded" in error_message:
-            return "😓 Límite de uso alcanzado. Intenta más tarde."
+    except Exception:
+        error_completo = traceback.format_exc()
+        logger.error(f"Fallo en el flujo de Gemini: {error_completo}")
+        
+        if "429" in error_completo:
+            return "😓 Límite de cuota alcanzado (muchas preguntas). Intenta en un minuto."
+        
+        return "Lo siento, hubo un error técnico. Revisa los logs de la consola."
         
         

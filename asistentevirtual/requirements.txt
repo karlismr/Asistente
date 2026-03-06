@@ -29,13 +29,7 @@ django-environ==0.12.1
 django-picklefield==3.4.0
 django-q2==1.9.0
 django-tailwind==4.4.1
-google-ai-generativelanguage==0.6.15
-google-api-core==2.28.1
-google-api-python-client==2.187.0
-google-auth==2.43.0
-google-auth-httplib2==0.2.1
-google-generativeai==0.8.6
-googleapis-common-protos==1.72.0
+google-genai==0.7.0
 grpcio==1.76.0
 grpcio-status==1.71.2
 h11==0.16.0

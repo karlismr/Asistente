@@ -1,3 +1,4 @@
+import logging
 import markdown
 import json
 from django.utils import timezone
@@ -13,8 +14,12 @@ from django.contrib.auth.decorators import login_required
 from .management.commands.revisar_recordatorios import Command as RevisarCommand
 from django.conf import settings
 
+logger = logging.getLogger(__name__)
+
+
 @login_required
 def chat_view(request):
+    logger.info(f"Acceso a chat_view por usuario: {request.user.username}")
     # Configuración del asistente
     config, created = AsistenteConfig.objects.get_or_create(
         user=request.user, 
@@ -31,32 +36,19 @@ def chat_view(request):
             # Guardar el mensaje del USUARIO
             Message.objects.create(content=content, is_user=True, user=request.user)
 
-            # Lógica de Recordatorios (Detectar palabras clave)
-            palabras_clave = ["recordar", "anota", "agenda", "recuerda", "recuérdame"]
-            if any(p in content.lower() for p in palabras_clave):
-                try:
-                    Recordatorio.objects.create(
-                        user=request.user,
-                        titulo=content[:200],
-                        fecha=timezone.now(), 
-                        notificado=False
-                    )
-                    print("DEBUG: ¡Recordatorio guardado con éxito en Neon!")
-                except Exception as e:
-                    print(f"DEBUG ERROR BASE DE DATOS: {e}")
-
-            # OBTENER RESPUESTA DE GEMINI
+    
             try:
                 respuesta_ia = obtener_respuesta_gemini(content, personalidad)
             except Exception as e:
-                print(f"DEBUG ERROR GEMINI: {e}")
-                respuesta_ia = "Lo siento, no pude procesar tu solicitud. 😕"
+                logger.error(f"DEBUG ERROR GEMINI: {e}")
+                respuesta_ia = "Lo siento, tuve un pequeño problema técnico. 😕"
             if not respuesta_ia:
-                respuesta_ia = "¡Entendido! Ya he anotado eso en tus recordatorios. 😎"
+                respuesta_ia = "Gojo está pensando... inténtalo de nuevo."
             
             # GUARDAR LA RESPUESTA DE LA IA
             msg_ia = Message.objects.create(content=respuesta_ia, is_user=False, user=request.user)
             respuesta_html = markdown.markdown(respuesta_ia)
+            logger.info(f"Respuesta de la IA guardada: {respuesta_ia}")
             
             return JsonResponse({
                 'success': True,
