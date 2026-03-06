@@ -1,11 +1,9 @@
 import json
-import os
-import google.generativeai as genai
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
+from .gemini_utils import obtener_respuesta_gemini 
+from .models import AsistenteConfig
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-3-flash-preview')
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -27,7 +25,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         mensaje_usuario = text_data_json['message']
 
-        respuesta_ia = await sync_to_async(self.obtener_respuesta_gemini)(mensaje_usuario)
+        personalidad = await self.get_personalidad()
+
+        respuesta_ia = await sync_to_async(self.obtener_respuesta_gemini)(mensaje_usuario, personalidad)
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -37,12 +37,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    def obtener_respuesta_gemini(self, consulta):
-        try:
-            response = model.generate_content(consulta)
-            return response.text
-        except Exception as e:
-            return f"Hubo un problema al contactar a la IA: {str(e)}"
+    @sync_to_async
+    def get_personalidad(self):
+        config = AsistenteConfig.objects.filter(user=self.scope["user"]).first()
+        if config:
+            return config.personalidad
+        return "Eres un asistente servicial."
 
     async def chat_message(self, event):
         message = event['message']
