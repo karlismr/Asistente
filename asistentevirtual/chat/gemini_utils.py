@@ -80,7 +80,7 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad):
         )
 
         response = client.models.generate_content(
-            model='gemini-2.0-flash', 
+            model='gemini-3.1-flash-lite-preview', 
             contents=pregunta_usuario,
             config=config
         )
