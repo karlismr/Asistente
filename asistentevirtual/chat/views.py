@@ -38,10 +38,13 @@ def chat_view(request):
 
     
             try:
-                respuesta_ia = obtener_respuesta_gemini(content, personalidad)
+                respuesta_ia = obtener_respuesta_gemini(content, personalidad, user=request.user)
+
             except Exception as e:
                 logger.error(f"DEBUG ERROR GEMINI: {e}")
-                respuesta_ia = "Lo siento, tuve un pequeño problema técnico. 😕"
+                respuesta_ia = "Vaya, parece que mi técnica infinita falló😕"
+
+
             if not respuesta_ia:
                 respuesta_ia = "Gojo está pensando... inténtalo de nuevo."
             

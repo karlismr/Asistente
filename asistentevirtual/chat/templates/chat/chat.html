@@ -74,13 +74,14 @@
 <form id="message-form" method="post" class="flex items-center p-2 bg-white shadow-inner shrink-0">
   {% csrf_token %}
   <input
+    id="chat-message-input"
     name="content"
     type="text"
     placeholder="Escribe tu mensaje..."
     required
     class="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
   />
-  <button type="submit" class="ml-2 text-purple-600 hover:text-purple-800">
+  <button id="chat-message-submit" type="submit" class="ml-2 text-purple-600 hover:text-purple-800">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
         <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
     </svg>
@@ -93,8 +94,8 @@
       const chatBox = document.getElementById("chat-box");
       const form = document.getElementById("message-form");
       const thinkIndicator = document.getElementById("think-indicator");
-      const input = form.querySelector("input[name='content']");
-      const btn = form.querySelector("button");
+      const input = document.getElementById("chat-message-input");
+      const btn = document.getElementById("chat-message-submit");
 
       const scrollToBottom = () => {
           chatBox.scrollTop = chatBox.scrollHeight;
@@ -178,7 +179,7 @@
   });
 </script>
 
-<script>
+{% comment %} <script>
     // WebSocket para comunicación en tiempo real 
     const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
     const chatSocket = new WebSocket(
@@ -210,7 +211,7 @@
         
         messageInputDom.value = ''; 
     };
-</script>
+</script> {% endcomment %}
 
 <style>
     .animate-fade-in {

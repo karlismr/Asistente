@@ -11,7 +11,7 @@ from google.genai import types
 logger = logging.getLogger(__name__)
 
 # --- DEFINIR LA FUNCIÓN ---
-def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
+def guardar_recordatorio(actividad: str, fecha_recordatorio: str, user):
     """
     Guarda un recordatorio en la base de datos.
     
@@ -20,11 +20,12 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
         fecha_recordatorio: La fecha CALCULADA por la IA para avisar al usuario (ej: "20 de Octubre (2 días antes)").
     """
     try:
-        nuevo_recordatorio = Recordatorio.objects.create(
+        Recordatorio.objects.create(
+            user=user,
             titulo=actividad,
             fecha=fecha_recordatorio
         )
-        print(f"--- RECORDATORIO AGENDADO: '{actividad}' para '{fecha_recordatorio}' ---")
+        print(f"--- RECORDATORIO AGENDADO: 'Usuario '{user}' agendó '{actividad}' para el '{fecha_recordatorio}' ---")
         return f"Genial: Recordatorio guardado para {fecha_recordatorio}."
     except Exception:
         error_db = traceback.format_exc() # Captura el error exacto de la DB
@@ -32,7 +33,7 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str):
         return f"Error técnico al guardar en base de datos."
 
 
-def obtener_respuesta_gemini(pregunta_usuario, personalidad):
+def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
     if not api_key:
@@ -43,6 +44,15 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad):
         
         ahora = datetime.datetime.now()
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
+
+        def registrar_aviso(actividad: str, fecha_recordatorio: str):
+            """
+            Guarda un recordatorio en la base de datos.
+            Args:
+                actividad: La tarea (ej: 'Comprar pan').
+                fecha_recordatorio: Fecha y hora (ej: '2026-03-24 08:00').
+            """
+            return guardar_recordatorio(actividad, fecha_recordatorio, user)
 
 
         instrucciones_sistema = f"""
@@ -74,26 +84,31 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad):
         # --- CONFIGURAR MODELO ---
         config = types.GenerateContentConfig(
             system_instruction=instrucciones_sistema,
-            tools=[guardar_recordatorio],
+            tools=[registrar_aviso],
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False),
             temperature=0.7
         )
 
         response = client.models.generate_content(
-            model='gemini-3.1-flash-lite-preview', 
+            model='gemini-3.1-flash-lite-preview',
             contents=pregunta_usuario,
             config=config
         )
 
-        return response.text
+       
+        return getattr(response, 'text', None) or getattr(response, 'output_text', None) or ''
 
     except Exception:
         error_completo = traceback.format_exc()
         logger.error(f"Fallo en el flujo de Gemini: {error_completo}")
-        
+
         if "429" in error_completo:
             return "😓 Límite de cuota alcanzado (muchas preguntas). Intenta en un minuto."
-        
+
         return "Lo siento, hubo un error técnico. Revisa los logs de la consola."
-        
+
+
+def guardar_con_usuario(actividad: str, fecha_recordatorio: str, user):
+    """Wrapper que pasa user a guardar_recordatorio"""
+    return guardar_recordatorio(actividad, fecha_recordatorio, user=user)
         
