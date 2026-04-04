@@ -136,7 +136,7 @@
           formData.append("content", message);
           formData.append("csrfmiddlewaretoken", csrfToken);
 
-          const response = await fetch("", {
+          const response = await fetch("{% url 'chat_view' %}", {
             method: "POST",
             body: formData,
           });
