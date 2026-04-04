@@ -20,5 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el código del asistente
 COPY . /app/
 
+# Recopilamos estáticos para que no fallen los estilos en Render
+RUN python manage.py collectstatic --noinput
+
 # Arrancar el motor Gunicorn
 CMD ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:10000"]
