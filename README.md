@@ -18,3 +18,7 @@ if my_variable is None:
     raise Exception("MY_VAR environment variable not set")
 
 print(f"The value of MY_VAR is: {my_variable}")
+
+Correr la app con docker:
+✅ docker build -t asistente .
+✅ docker run -p 10000:10000 --env-file .env asistente
