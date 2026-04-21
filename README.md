@@ -2,7 +2,7 @@
 
 Para iniciar la aplicacion debo estar en la carpeta "asistente virtual"
 ✅cd asistentevirtual
-Luego si correr: ✅python manage.py runserver asistente.local:8000
+Luego si correr: ✅python manage.py runserverk
 
 activar entorno virtual: 
 ✅.\venv\Scripts\activate
