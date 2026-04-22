@@ -30,7 +30,7 @@
 
 <!--  MENSAJES DEL CHAT -->
 <div id="chat-box" class="flex-1 overflow-y-auto px-4 py-2 space-y-4 scroll-smooth">
-  {% for message in messages %} {% if forloop.counter|divisibleby:2 %}
+  {% for message in messages %} {% if not message.is_user %}
   
   <!-- Bot -->
    <span class="text-xs text-gray-500 block mt-1">
@@ -60,7 +60,7 @@
 </div>
 
 <!-- Indicador de "escribiendo" -->
-<div id="think-indicator" class="hidden  flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
+<div id="think-indicator" class=" flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
      <div class="flex space-x-1">
         <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
         <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-75"></div>

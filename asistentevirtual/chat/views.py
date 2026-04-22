@@ -62,7 +62,7 @@ def chat_view(request):
         return JsonResponse({'success': False, 'error': 'No content'})
 
     # Cargar historial de mensajes para el GET
-    messages = Message.objects.filter(user=request.user).order_by('created_at')
+    messages = Message.objects.filter(user=request.user).order_by('created_at', 'id')
     
     return render(request, 'chat/chat.html', {
         'messages': messages,
