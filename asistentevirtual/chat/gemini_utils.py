@@ -1,4 +1,3 @@
-
 import traceback
 from django.conf import settings 
 import logging
@@ -7,17 +6,16 @@ from .models import Recordatorio
 from google import genai 
 from google.genai import types
 
-
 logger = logging.getLogger(__name__)
 
-# --- DEFINIR LA FUNCIÓN ---
+# --- 1. FUNCIÓN PARA GUARDAR EN LA BASE DE DATOS (MANTENIDA IDÉNTICA) ---
 def guardar_recordatorio(actividad: str, fecha_recordatorio: str, user):
     """
     Guarda un recordatorio en la base de datos.
     
     Args:
         actividad: La descripción del evento o tarea (ej: "Ir al dentista").
-        fecha_recordatorio: La fecha CALCULADA por la IA para avisar al usuario (ej: "20 de Octubre (2 días antes)").
+        fecha_recordatorio: La fecha CALCULADA por la IA para avisar al usuario.
     """
     try:
         Recordatorio.objects.create(
@@ -33,6 +31,18 @@ def guardar_recordatorio(actividad: str, fecha_recordatorio: str, user):
         return f"Error técnico al guardar en base de datos."
 
 
+# --- 2. LA HERRAMIENTA PARA LA IA (MOVIDA AFUERA PARA EL NUEVO SDK) ---
+def registrar_aviso(actividad: str, fecha_recordatorio: str):
+    """
+    Guarda un recordatorio en la base de datos.
+    Args:
+        actividad: La tarea (ej: 'Comprar pan').
+        fecha_recordatorio: Fecha y hora (ej: '2026-03-24 08:00').
+    """
+    return {"actividad": actividad, "fecha_recordatorio": fecha_recordatorio}
+
+
+# --- 3. FUNCIÓN PRINCIPAL ADAPTADA A LA NUEVA ACTUALIZACIÓN ---
 def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
@@ -45,16 +55,6 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         ahora = datetime.datetime.now()
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
 
-        def registrar_aviso(actividad: str, fecha_recordatorio: str):
-            """
-            Guarda un recordatorio en la base de datos.
-            Args:
-                actividad: La tarea (ej: 'Comprar pan').
-                fecha_recordatorio: Fecha y hora (ej: '2026-03-24 08:00').
-            """
-            return guardar_recordatorio(actividad, fecha_recordatorio, user)
-
-
         instrucciones_sistema = f"""
         CONTEXTO ACTUAL:
         Hoy es: {fecha_actual}.
@@ -64,11 +64,11 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
 
 
         REGLAS DE GESTIÓN DE RECORDATORIOS (MUY IMPORTANTE):
-        Tienes acceso a una herramienta llamada `guardar_recordatorio`.
+        Tienes acceso a una herramienta llamada `registrar_aviso`.
 
         CASO A: EL USUARIO NO ESPECIFICA CUÁNDO RECORDAR
         Si el usuario dice "Tengo un evento tal fecha" pero NO dice cuándo quiere que le avises, 
-        debes ser proactivo y llamar a la función `guardar_recordatorio` MÚLTIPLES VECES para cubrir estos plazos (si el tiempo lo permite):
+        debes ser proactivo y llamar a la función `registrar_aviso` MÚLTIPLES VECES para cubrir estos plazos (si el tiempo lo permite):
         1. 1 mes antes del evento.
         2. 1 semana antes del evento.
         3. El dia anterior al evento.
@@ -81,22 +81,34 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         NOTA: Calcula las fechas tú mismo basándote en la fecha actual ({fecha_actual}) y la fecha del evento.
         """
 
-        # --- CONFIGURAR MODELO ---
+        # Configuración adaptada al nuevo SDK de google-genai
         config = types.GenerateContentConfig(
             system_instruction=instrucciones_sistema,
             tools=[registrar_aviso],
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False),
             temperature=0.7
         )
 
+        # Ejecución usando el nuevo modelo estable del SDK
         response = client.models.generate_content(
-            model='gemini-3.1-flash-lite-preview',
+            model='gemini-3.1-flash-lite',
             contents=pregunta_usuario,
             config=config
         )
 
-       
-        return getattr(response, 'text', None) or getattr(response, 'output_text', None) or ''
+        # --- INTERCEPTOR DE LLAMADAS DE FUNCIÓN (NUEVA ACTUALIZACIÓN) ---
+        if response.function_calls:
+            for call in response.function_calls:
+                if call.name == 'registrar_aviso':
+                    args = call.args
+                    # Aquí se conecta con tu función original y le pasa el 'user' de Django
+                    guardar_recordatorio(
+                        actividad=args.get('actividad'),
+                        fecha_recordatorio=args.get('fecha_recordatorio'),
+                        user=user
+                    )
+            return f"¡Entendido! He agendado tu recordatorio para: {args.get('actividad')}."
+
+        return response.text if response.text else ''
 
     except Exception:
         error_completo = traceback.format_exc()
@@ -108,7 +120,7 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         return "Lo siento, hubo un error técnico. Revisa los logs de la consola."
 
 
+# --- 4. WRAPPER FINAL (MANTENIDO IDÉNTICA) ---
 def guardar_con_usuario(actividad: str, fecha_recordatorio: str, user):
     """Wrapper que pasa user a guardar_recordatorio"""
     return guardar_recordatorio(actividad, fecha_recordatorio, user=user)
-        
