@@ -22,3 +22,6 @@ print(f"The value of MY_VAR is: {my_variable}")
 Correr la app con docker:
 ✅ docker build -t asistente .
 ✅ docker run -p 10000:10000 --env-file .env asistente
+
+# Comando para corregir los mensajes si se voltean:
+✅ python manage.py corregir_mensajes

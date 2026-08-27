@@ -93,6 +93,13 @@ def registro(request):
         form = UserCreationForm()
     return render(request, 'chat/registro.html', {'form': form})
 
+@login_required
+def eliminar_chat(request):
+    if request.method == 'POST':
+        count, _ = Message.objects.filter(user=request.user).delete()
+        logger.info(f"Chat eliminado ({count} mensajes) por usuario: {request.user.username}")
+    return redirect('chat_view')
+
 def ejecutar_revision_cron(request):
     token_recibido = request.GET.get('key')
     if token_recibido == settings.CLAVE_SECRETA:

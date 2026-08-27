@@ -98,6 +98,24 @@ body {
     background-color: #dc2626;
 }
 
+.btn-delete-chat {
+    width: auto;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.85rem;
+    background-color: #eab308;
+    color: #1f2937;
+    font-weight: 600;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-delete-chat:hover {
+    background-color: #ca8a04;
+    color: white;
+}
+
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto; 

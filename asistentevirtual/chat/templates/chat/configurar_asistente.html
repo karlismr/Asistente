@@ -54,6 +54,11 @@
             {% csrf_token %}
             <button type="submit" class="btn-logout">Cerrar Sesión</button>
         </form>
+
+        <form action="{% url 'eliminar_chat' %}" method="post" style="margin-top: 12px;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar todo el historial de chat?');">
+            {% csrf_token %}
+            <button type="submit" class="btn-delete-chat">Eliminar chat</button>
+        </form>
     </div>
 </div>
 {% endblock %}
