@@ -2,7 +2,9 @@
 
 <div class="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
 <div
-  class="bg-purple-500 text-white px-4 py-3 flex items-center justify-between shadow-md"
+  id="chat-header"
+  data-header-color="{{ config.color_encabezado|default:'#a855f7' }}"
+  class="bg-purple-500 text-white px-4 py-3 flex items-center justify-between shadow-md transition-colors"
 >
   <div class="flex items-center space-x-3">
     {% if config.imagen %}
@@ -20,16 +22,25 @@
     />
     {% endif %}
 
-    <p class="font-semibold text-sm">{{ config.nombre }}</p>
-    <p class="text-xs text-purple-100">Disponible</p>
+    <div>
+      <p class="font-semibold text-sm">{{ config.nombre }}</p>
+      <p class="text-xs opacity-80">Disponible</p>
+    </div>
   </div>
   <a href="{% url 'configurar_asistente' %}" title="Configurar asistente">
-    <div class="text-white text-2xl hover:text-purple-200 transition">⚙️</div>
+    <div class="text-white text-2xl hover:opacity-80 transition">⚙️</div>
   </a>
 </div>
 
 <!--  MENSAJES DEL CHAT -->
-<div id="chat-box" class="flex-1 overflow-y-auto px-4 py-2 space-y-4 scroll-smooth">
+<div 
+  id="chat-box" 
+  data-bg-image="{% if config.imagen_fondo %}{{ config.imagen_fondo.url }}{% endif %}" 
+  class="flex-1 overflow-y-auto px-4 py-2 space-y-4 scroll-smooth bg-cover bg-center bg-no-repeat"
+>
+
+
+
   {% for message in messages %} {% if not message.is_user %}
   
   <!-- Bot -->
@@ -60,7 +71,8 @@
 </div>
 
 <!-- Indicador de "escribiendo" -->
-<div id="think-indicator" class=" flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
+<div id="think-indicator" class="hidden flex items-center gap-2 text-gray-500 text-sm mt-2 p-2">
+
      <div class="flex space-x-1">
         <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
         <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce delay-75"></div>
@@ -92,14 +104,24 @@
 <script>
   document.addEventListener("DOMContentLoaded", function() {
       const chatBox = document.getElementById("chat-box");
+      const chatHeader = document.getElementById("chat-header");
       const form = document.getElementById("message-form");
       const thinkIndicator = document.getElementById("think-indicator");
       const input = document.getElementById("chat-message-input");
       const btn = document.getElementById("chat-message-submit");
 
+      // Aplicar color de encabezado e imagen de fondo dinámicos
+      if (chatHeader && chatHeader.dataset.headerColor) {
+          chatHeader.style.backgroundColor = chatHeader.dataset.headerColor;
+      }
+      if (chatBox && chatBox.dataset.bgImage) {
+          chatBox.style.backgroundImage = "url('" + chatBox.dataset.bgImage + "')";
+      }
+
       const scrollToBottom = () => {
           chatBox.scrollTop = chatBox.scrollHeight;
       }
+
 
       scrollToBottom();
 

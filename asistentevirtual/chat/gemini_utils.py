@@ -54,13 +54,16 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         
         ahora = datetime.datetime.now()
         fecha_actual = ahora.strftime("%A %d de %B de %Y")
+        hora_actual = ahora.strftime("%H:%M")
 
         instrucciones_sistema = f"""
         CONTEXTO ACTUAL:
         Hoy es: {fecha_actual}.
+        Hora actual: {hora_actual}.
 
         TU IDENTIDAD:
         {personalidad}
+
 
 
         REGLAS DE GESTIÓN DE RECORDATORIOS (MUY IMPORTANTE):

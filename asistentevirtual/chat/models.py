@@ -17,6 +17,9 @@ class AsistenteConfig(models.Model):
     nombre = models.CharField(max_length=100, default="Mi Asistente")
     personalidad = models.TextField(default="Eres un asistente amable y servicial.") 
     imagen = models.ImageField(upload_to='asistente/', null=True, blank=True)
+    imagen_fondo = models.ImageField(upload_to='fondos/', null=True, blank=True)
+    color_encabezado = models.CharField(max_length=20, default="#a855f7")
+
 
     def __str__(self):
         return f"Config de {self.user.username}"

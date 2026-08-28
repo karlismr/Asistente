@@ -1,17 +1,9 @@
 {
-<<<<<<< HEAD
   "terminal.integrated.cwd": "${workspaceFolder}/asistentevirtual",
-
-  // Ayuda a que VS Code detecte bien las importaciones de Python
+  "python.defaultInterpreterPath": "${workspaceFolder}/asistentevirtual/venv/Scripts/python.exe",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/asistentevirtual"
   ],
-  "python.terminal.activateEnvInCurrentTerminal": true
+  "python.terminal.activateEnvironment": true
 }
-=======
-    "terminal.integrated.cwd": "${workspaceFolder}/asistentevirtual",
-    "python.analysis.extraPaths": ["${workspaceFolder}/asistentevirtual"],
-    "python.defaultInterpreterPath": ".\\.venv\\Scripts\\python.exe",
-    "python.terminal.activateEnvironment": true
-}
->>>>>>> 20b76a6b295647bec4054b8396552131665dfad3
+

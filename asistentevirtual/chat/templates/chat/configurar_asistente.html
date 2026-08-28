@@ -23,17 +23,40 @@
         </div>
 
         <div>
-            <label>Imagen del Asistente:</label>
+            <label>Imagen de Perfil del Asistente:</label>
             {{ form.imagen }}
             
             {% if form.instance.imagen %}
             <div style="text-align: center; margin-top: 15px;">
                 <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Imagen actual:</p>
                 <img src="{{ form.instance.imagen.url }}" 
-                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid white; shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             </div>
             {% endif %}
         </div>
+
+        <div>
+            <label>Color del Encabezado (Barra superior):</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                {{ form.color_encabezado }}
+                <span style="font-size: 0.85rem; color: #4b5563;">Elige el color de fondo para la barra del asistente</span>
+            </div>
+        </div>
+
+
+        <div>
+            <label>Imagen de Fondo del Chat:</label>
+            {{ form.imagen_fondo }}
+            
+            {% if form.instance.imagen_fondo %}
+            <div style="text-align: center; margin-top: 15px;">
+                <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Fondo actual:</p>
+                <img src="{{ form.instance.imagen_fondo.url }}" 
+                     style="width: 160px; height: 90px; object-fit: cover; border-radius: 8px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            </div>
+            {% endif %}
+        </div>
+
 
         <button type="submit" class="btn-primary-custom">Guardar Cambios</button>
     </form>

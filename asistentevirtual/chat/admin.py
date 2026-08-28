@@ -4,10 +4,9 @@ from .models import AsistenteConfig, Recordatorio
 
 @admin.register(AsistenteConfig)
 class AsistenteConfigAdmin(admin.ModelAdmin):
-    list_display = ('user', 'nombre', 'personalidad') 
-    
-    # Esto organiza como se ven los datos cuando haces clic para editar
-    fields = ('user', 'nombre_asistente', 'personalidad', 'imagen')
+    list_display = ('user', 'nombre', 'personalidad', 'color_encabezado') 
+    fields = ('user', 'nombre', 'personalidad', 'imagen', 'imagen_fondo', 'color_encabezado')
+
     
 
 # Registramos nueva tabla
