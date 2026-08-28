@@ -58,6 +58,17 @@ def registrar_aviso(actividad: str, fecha_recordatorio: str):
     return {"actividad": actividad, "fecha_recordatorio": fecha_recordatorio}
 
 
+def es_intencion_recordatorio(texto: str) -> bool:
+    palabras_clave = [
+        "record", "recuerda", "recuerdame", "recuérdame", "agendar", "agenda",
+        "tengo que", "cita", "evento", "avisar", "avísame", "avisame",
+        "guardar recordatorio", "anotar", "anota", "programar", "mañana tengo",
+        "tengo un", "tengo una", "peluqueria", "peluquería", "dentista", "medico", "médico"
+    ]
+    texto_lower = str(texto).lower()
+    return any(kw in texto_lower for kw in palabras_clave)
+
+
 # --- 3. FUNCIÓN PRINCIPAL DE GEMINI ---
 def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
@@ -97,17 +108,25 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         
         CASO B: EL USUARIO ESPECIFICA CUÁNDO RECORDAR
         Si el usuario dice explícitamente cuándo quiere el aviso (ej: "Recuérdame mañana a las 10am" o "Avísame 3 días antes"),
-        obedece estrictamente la solicitud del usuario, llamando a la función para las fechas pedidas.
+        obedece strictly la solicitud del usuario, llamando a la función para las fechas pedidas.
         """
+
+        mode_fc = types.FunctionCallingConfigMode.ANY if es_intencion_recordatorio(pregunta_usuario) else types.FunctionCallingConfigMode.AUTO
 
         config = types.GenerateContentConfig(
             system_instruction=instrucciones_sistema,
             tools=[registrar_aviso],
-            temperature=0.7
+            tool_config=types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode=mode_fc
+                )
+            ),
+            temperature=0.3
         )
 
+
         response = client.models.generate_content(
-            model='gemini-3.1-flash-lite',
+            model='gemini-3.5-flash-lite',
             contents=pregunta_usuario,
             config=config
         )
