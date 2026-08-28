@@ -8,41 +8,57 @@ from google.genai import types
 
 logger = logging.getLogger(__name__)
 
-# --- 1. FUNCIÓN PARA GUARDAR EN LA BASE DE DATOS (MANTENIDA IDÉNTICA) ---
+# --- 1. FUNCIÓN PARA GUARDAR EN LA BASE DE DATOS ---
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+
 def guardar_recordatorio(actividad: str, fecha_recordatorio: str, user):
     """
     Guarda un recordatorio en la base de datos.
-    
-    Args:
-        actividad: La descripción del evento o tarea (ej: "Ir al dentista").
-        fecha_recordatorio: La fecha CALCULADA por la IA para avisar al usuario.
     """
     try:
-        Recordatorio.objects.create(
+        dt = None
+        if fecha_recordatorio:
+            str_fecha = str(fecha_recordatorio).strip()
+            dt = parse_datetime(str_fecha)
+            if not dt:
+                for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"):
+                    try:
+                        dt = datetime.datetime.strptime(str_fecha, fmt)
+                        break
+                    except ValueError:
+                        continue
+        
+        if dt and timezone.is_naive(dt):
+            dt = timezone.make_aware(dt)
+
+        fecha_final = dt if dt else fecha_recordatorio
+
+        recordatorio = Recordatorio.objects.create(
             user=user,
             titulo=actividad,
-            fecha=fecha_recordatorio
+            fecha=fecha_final
         )
-        print(f"--- RECORDATORIO AGENDADO: 'Usuario '{user}' agendó '{actividad}' para el '{fecha_recordatorio}' ---")
-        return f"Genial: Recordatorio guardado para {fecha_recordatorio}."
+        logger.info(f"--- RECORDATORIO AGENDADO EXITOSAMENTE: '{user}' agendó '{actividad}' para '{fecha_final}' ---")
+        return f"Genial: Recordatorio guardado para {fecha_final}."
     except Exception:
-        error_db = traceback.format_exc() # Captura el error exacto de la DB
-        logger.error(f"Error al escribir en Neon: {error_db}")
-        return f"Error técnico al guardar en base de datos."
+        error_db = traceback.format_exc()
+        logger.error(f"Error al escribir recordatorio en BD: {error_db}")
+        return "Error técnico al guardar en base de datos."
 
 
-# --- 2. LA HERRAMIENTA PARA LA IA (MOVIDA AFUERA PARA EL NUEVO SDK) ---
+# --- 2. LA HERRAMIENTA PARA LA IA ---
 def registrar_aviso(actividad: str, fecha_recordatorio: str):
     """
     Guarda un recordatorio en la base de datos.
     Args:
-        actividad: La tarea (ej: 'Comprar pan').
-        fecha_recordatorio: Fecha y hora (ej: '2026-03-24 08:00').
+        actividad: La tarea o evento a recordar (ej: 'Ir a la peluquería').
+        fecha_recordatorio: Fecha y hora exacta en formato 'YYYY-MM-DD HH:MM:SS' (ej: '2026-08-28 10:00:00').
     """
     return {"actividad": actividad, "fecha_recordatorio": fecha_recordatorio}
 
 
-# --- 3. FUNCIÓN PRINCIPAL ADAPTADA A LA NUEVA ACTUALIZACIÓN ---
+# --- 3. FUNCIÓN PRINCIPAL DE GEMINI ---
 def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
     api_key = getattr(settings, "GEMINI_API_KEY", None)
 
@@ -64,52 +80,55 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
         TU IDENTIDAD:
         {personalidad}
 
-
-
-        REGLAS DE GESTIÓN DE RECORDATORIOS (MUY IMPORTANTE):
-        Tienes acceso a una herramienta llamada `registrar_aviso`.
+        REGLAS OBLIGATORIAS DE GESTIÓN DE RECORDATORIOS (CRÍTICO):
+        Tienes acceso a la herramienta `registrar_aviso`.
+        
+        1. SIEMPRE QUE EL USUARIO SOLICITE UN RECORDATORIO, CITA, EVENTO O TAREA (ej: "recuérdame...", "tengo que ir...", "guarda un recordatorio..."), ES ABSOLUTAMENTE OBLIGATORIO E IMPRESCINDIBLE QUE EJECUTES LA FUNCIÓN `registrar_aviso`.
+        2. NUNCA respondas simulando con solo texto que agendaste o guardaste el recordatorio si NO has invocado la función `registrar_aviso`.
+        3. El parámetro `fecha_recordatorio` DEBE estar en formato 'YYYY-MM-DD HH:MM:SS'. Calcula la fecha exacta basándote en que hoy es {fecha_actual} y la hora actual es {hora_actual}.
 
         CASO A: EL USUARIO NO ESPECIFICA CUÁNDO RECORDAR
         Si el usuario dice "Tengo un evento tal fecha" pero NO dice cuándo quiere que le avises, 
-        debes ser proactivo y llamar a la función `registrar_aviso` MÚLTIPLES VECES para cubrir estos plazos (si el tiempo lo permite):
+        debes ser proactivo y llamar a la función `registrar_aviso` MÚLTIPLES VECES para cubrir estos plazos:
         1. 1 mes antes del evento.
         2. 1 semana antes del evento.
-        3. El dia anterior al evento.
+        3. El día anterior al evento.
         4. El mismo día del evento 6 horas antes.
         
         CASO B: EL USUARIO ESPECIFICA CUÁNDO RECORDAR
-        Si el usuario dice explícitamente cuándo quiere el aviso (ej: "Recuérdame solo mañana" o "Avísame 3 días antes"),
-        IGNORA las reglas del 'Caso A' y obedece estrictamente la solicitud del usuario, llamando a la función solo para las fechas pedidas.
-
-        NOTA: Calcula las fechas tú mismo basándote en la fecha actual ({fecha_actual}) y la fecha del evento.
+        Si el usuario dice explícitamente cuándo quiere el aviso (ej: "Recuérdame mañana a las 10am" o "Avísame 3 días antes"),
+        obedece estrictamente la solicitud del usuario, llamando a la función para las fechas pedidas.
         """
 
-        # Configuración adaptada al nuevo SDK de google-genai
         config = types.GenerateContentConfig(
             system_instruction=instrucciones_sistema,
             tools=[registrar_aviso],
             temperature=0.7
         )
 
-        # Ejecución usando el nuevo modelo estable del SDK
         response = client.models.generate_content(
             model='gemini-3.1-flash-lite',
             contents=pregunta_usuario,
             config=config
         )
 
-        # --- INTERCEPTOR DE LLAMADAS DE FUNCIÓN (NUEVA ACTUALIZACIÓN) ---
+        # --- INTERCEPTOR DE LLAMADAS DE FUNCIÓN ---
         if response.function_calls:
+            agendados = []
             for call in response.function_calls:
                 if call.name == 'registrar_aviso':
                     args = call.args
-                    # Aquí se conecta con tu función original y le pasa el 'user' de Django
+                    act = args.get('actividad')
+                    fec = args.get('fecha_recordatorio')
                     guardar_recordatorio(
-                        actividad=args.get('actividad'),
-                        fecha_recordatorio=args.get('fecha_recordatorio'),
+                        actividad=act,
+                        fecha_recordatorio=fec,
                         user=user
                     )
-            return f"¡Entendido! He agendado tu recordatorio para: {args.get('actividad')}."
+                    agendados.append(f"'{act}' para {fec}")
+            
+            if agendados:
+                return f"¡Entendido! He registrado en la base de datos tu recordatorio: {', '.join(agendados)}."
 
         return response.text if response.text else ''
 
@@ -121,6 +140,7 @@ def obtener_respuesta_gemini(pregunta_usuario, personalidad, user):
             return "😓 Límite de cuota alcanzado (muchas preguntas). Intenta en un minuto."
 
         return "Lo siento, hubo un error técnico. Revisa los logs de la consola."
+
 
 
 # --- 4. WRAPPER FINAL (MANTENIDO IDÉNTICA) ---
